@@ -25,12 +25,19 @@
  */
 
 #include <iostream>
+#include <unistd.h>
+#include <ncurses.h>
+#include <stdio.h>
 using namespace std;
 
 string tetromino[7];
+const int tetrominoWidth = 4;
+
 const int fieldWidth = 12;
 const int fieldHeight = 18;
-char field[fieldWidth * fieldHeight];
+const int fieldArea = fieldWidth * fieldHeight;
+char field[fieldArea];
+char screen[fieldArea];
 
 /**
  * Prints tetromino in nice format.
@@ -40,16 +47,16 @@ char field[fieldWidth * fieldHeight];
  */
 void printTetromino(string tetromino, int w = 4) {
 
-  for (int i = 0; i < tetromino.length(); i++) {
+    for (int i = 0; i < tetromino.length(); i++) {
 
-    if (i % w == 0) {
-      cout << "\n";
+        if (i % w == 0) {
+            cout << "\n";
+        }
+
+        cout << tetromino.at(i);
     }
 
-    cout << tetromino.at(i);
-  }
-
-  cout << "\n";
+    cout << "\n";
 }
 
 /**
@@ -69,18 +76,18 @@ void printTetromino(string tetromino, int w = 4) {
  */
 int rotate(int x, int y, int r, int w = 4) {
 
-  switch (r % 4) {
-  case 0:
-    return w * y + x;
-  case 1:
-    return w * (w - 1) + y - w * x;
-  case 2:
-    return w * w - 1 - w * y - x;
-  case 3:
-    return w - 1 - y + w * x;
-  }
+    switch (r % 4) {
+    case 0:
+        return w * y + x;
+    case 1:
+        return w * (w - 1) + y - w * x;
+    case 2:
+        return w * w - 1 - w * y - x;
+    case 3:
+        return w - 1 - y + w * x;
+    }
 
-  return 0;
+    return 0;
 }
 
 /**
@@ -98,75 +105,179 @@ int rotate(int x, int y, int r, int w = 4) {
  */
 string rotateTetromino(string tetromino, int r, int w = 4) {
 
-  string rotatedTetromino;
+    string rotatedTetromino;
 
-  for (int y = 0; y < w; y++) {
-    for (int x = 0; x < w; x++) {
-      int indexToAppend = rotate(x, y, r, w);
-      char pieceToAppend = tetromino[indexToAppend];
-      rotatedTetromino += pieceToAppend;
+    for (int y = 0; y < w; y++) {
+        for (int x = 0; x < w; x++) {
+            int indexToAppend = rotate(x, y, r, w);
+            char pieceToAppend = tetromino[indexToAppend];
+            rotatedTetromino += pieceToAppend;
+        }
     }
-  }
 
-  return rotatedTetromino;
+    return rotatedTetromino;
+}
+
+/**
+ * Printing screen.
+ */
+void printScreen(char screen[]) {
+
+    for (int i = 0; i < fieldArea; i++) {
+        if (i % (fieldWidth) == 0) {
+            cout << "\n";
+        }
+        cout << screen[i];
+    }
+}
+
+/**
+ * Checking if tetromino fits.
+ *
+ * @param tetrominoIndex Tetromino index to check (0-6).
+ * @param r Rotate index, may be
+ *   one of the following:
+ *   0: 0 degrees,
+ *   1: 90 degrees,
+ *   2: 180 degrees,
+ *   3: 270 degrees.
+ * @param posX, posY Coordinates of top left
+ *   corner of tetromino.
+ * @param w Width of tetromino block.
+ * @return if tetromino fits.
+ */
+bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY, int w = 4) {
+
+    for (int x = 0; x < w; x++) {
+        for (int y = 0; y < w; y++) {
+
+            // Index of rotated pixel.
+            int pi = rotate(x, y, r, w);
+
+            // Index of pixel in field.
+            int fi = ((posY + y) * fieldWidth) + (posX + x);
+
+            if (posX + x >= 0 && posX + x < fieldWidth) {
+                if (posY + y >= 0 && posY + y < fieldHeight) {
+
+                    // If tetromino has piece on current pixel
+                    // and current pixel on field is not empty
+                    // then piece does not fits.
+                    if (tetromino[tetrominoIndex][pi] == 'X' &&
+                        field[fi] != 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 int main() {
 
-  tetromino[0].append("..X.");
-  tetromino[0].append("..X.");
-  tetromino[0].append("..X.");
-  tetromino[0].append("..X.");
+    tetromino[0].append("..X.");
+    tetromino[0].append("..X.");
+    tetromino[0].append("..X.");
+    tetromino[0].append("..X.");
 
-  tetromino[1].append("..X.");
-  tetromino[1].append(".XX.");
-  tetromino[1].append(".X..");
-  tetromino[1].append("....");
+    tetromino[1].append("..X.");
+    tetromino[1].append(".XX.");
+    tetromino[1].append(".X..");
+    tetromino[1].append("....");
 
-  tetromino[2].append(".X..");
-  tetromino[2].append(".XX.");
-  tetromino[2].append("..X.");
-  tetromino[2].append("....");
+    tetromino[2].append(".X..");
+    tetromino[2].append(".XX.");
+    tetromino[2].append("..X.");
+    tetromino[2].append("....");
 
-  tetromino[3].append("....");
-  tetromino[3].append(".XX.");
-  tetromino[3].append(".XX.");
-  tetromino[3].append("....");
+    tetromino[3].append("....");
+    tetromino[3].append(".XX.");
+    tetromino[3].append(".XX.");
+    tetromino[3].append("....");
 
-  tetromino[4].append("..X.");
-  tetromino[4].append(".XX.");
-  tetromino[4].append("..X.");
-  tetromino[4].append("....");
+    tetromino[4].append("..X.");
+    tetromino[4].append(".XX.");
+    tetromino[4].append("..X.");
+    tetromino[4].append("....");
 
-  tetromino[5].append("....");
-  tetromino[5].append(".XX.");
-  tetromino[5].append("..X.");
-  tetromino[5].append("..X.");
+    tetromino[5].append("....");
+    tetromino[5].append(".XX.");
+    tetromino[5].append("..X.");
+    tetromino[5].append("..X.");
 
-  tetromino[6].append("....");
-  tetromino[6].append("..XX");
-  tetromino[6].append("..X.");
-  tetromino[6].append("..X.");
+    tetromino[6].append("....");
+    tetromino[6].append("..XX");
+    tetromino[6].append("..X.");
+    tetromino[6].append("..X.");
 
-  printTetromino(tetromino[4]);
-  cout << "\n";
-
-  printTetromino(rotateTetromino(tetromino[4], 3));
-  cout << "\n";
-
-  for (int x = 0; x < fieldWidth; x++) {
-    for (int y = 0; y < fieldHeight; y++) {
-      field[y * fieldWidth + x] =
-          (x == 0 || x == fieldWidth - 1 || y == fieldHeight) ? 9 : 0;
+    // Filling play field.
+    for (int x = 0; x < fieldWidth; x++) {
+        for (int y = 0; y < fieldHeight; y++) {
+            field[y * fieldWidth + x] =
+                (x == 0 || x == fieldWidth - 1 || y == fieldHeight - 1) ? 9 : 0;
+        }
     }
-  }
 
-  for (int i = 0; i < sizeof(field); i++) {
-    cout << field[i];
-  }
+    // Game logic.
+    bool isGameOver = false;
+    int currentPiece = 2;
+    int currentRotation = 0;
+    int currentX = fieldWidth / 2;
+    int currentY = 0;
 
-  cout << "\n";
-  cout << "\n";
+    /* initscr(); */ 
 
-  return 0;
+    // Game cycle.
+    while (!isGameOver) {
+
+        // ========== GAME TIMING ==========
+
+        /* usleep(50000); */
+        usleep(1000000);
+
+        // ========== INPUT ================
+
+        int ch;
+        ch = getch();
+
+        // ========== GAME LOGIC ===========
+
+        // ========== RENDER OUTPUT ========
+
+        // Clearing screen.
+        cout << "\033[2J\033[1;1H";
+
+        // Filling screen with field.
+        for (int x = 0; x < fieldWidth; x++) {
+            for (int y = 0; y < fieldHeight; y++) {
+                screen[y * fieldWidth + x] =
+                    " ABCDEFG=#"[field[y * fieldWidth + x]];
+            }
+        }
+
+        // Filling screen with piece.
+        for (int x = 0; x < tetrominoWidth; x++) {
+            for (int y = 0; y < tetrominoWidth; y++) {
+
+                if (tetromino[currentPiece][rotate(x, y, currentRotation,
+                                                   tetrominoWidth)] == 'X') {
+                    screen[(currentY + y) * fieldWidth + (currentX + x)] =
+                        "ABCDEFG"[currentPiece];
+                }
+            }
+        }
+
+        // Printing screen.
+        printScreen(screen);
+        cout << "\n";
+        cout << "\n";
+        cout << ch;
+
+        cout << "\n";
+        cout << "\n";
+    }
+
+    return 0;
 }
