@@ -26,19 +26,19 @@
 
 #include <iostream>
 #include <ncurses.h>
+#include <signal.h>
 #include <unistd.h>
 using namespace std;
 
 static string tetromino[7];
 const int tetrominoWidth = 4;
 
+int row, col; // Dimensions of current terminal instance.
 const int fieldWidth = 12;
 const int fieldHeight = 18;
 const int fieldArea = fieldWidth * fieldHeight;
 char field[fieldArea];
 char screen[fieldArea];
-
-int row, col;
 
 /**
  * Prints tetromino in nice format.
@@ -124,12 +124,10 @@ void printScreen(char screen[]) {
     for (int i = 0; i < fieldArea; i++) {
         if (i % (fieldWidth) == 0) {
             mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
-                    i % (fieldWidth) + (col / 2 - fieldWidth / 2),
-                    '\n');
+                    i % (fieldWidth) + (col / 2 - fieldWidth / 2), '\n');
         }
         mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
-                i % (fieldWidth) + (col / 2 - fieldWidth / 2),
-                screen[i]);
+                i % (fieldWidth) + (col / 2 - fieldWidth / 2), screen[i]);
     }
 }
 
@@ -176,23 +174,9 @@ bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY) {
     return true;
 }
 
-/* static string getAnswer() { */
-/*     string answer; */
-/*     cin >> answer; */
-/*     return answer; */
-/* } */
-
-/* int kbhit(void) { */
-/*     int ch = getch(); */
-
-/*     if (ch != ERR) { */
-/*         ungetch(ch); */
-/*         return 1; */
-/*     } else { */
-/*         return 0; */
-/*     } */
-/* } */
-
+/**
+ * Adding tetrominos strings to tetromino variable.
+ */
 void prepareTetromino() {
 
     tetromino[0].append("..X.");
@@ -231,7 +215,26 @@ void prepareTetromino() {
     tetromino[6].append("..X.");
 }
 
+
+/**
+ * Exiting ncurses before exiting program
+ * so terminal doesn't broke.
+ */
+void interruptionHandler(int signal) {
+    endwin();
+    printf("Caught signal %d\n", signal);
+    printf("Exiting...\n");
+    exit(1);
+}
+
 int main() {
+
+    // Attaching interruption handler.
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = interruptionHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
 
     // Filling tetromino array.
     prepareTetromino();
@@ -282,17 +285,6 @@ int main() {
         pressedKey = getch();
         clear();
 
-        /* if (kbhit()) { */
-        /*     pressedKey = getch(); */
-        /*     /1* printw("Key pressed! It was: %d\n", pressedKey); *1/ */
-        /* } */
-
-        /* else { */
-        /*     printw("No key pressed yet...\n"); */
-        /*     refresh(); */
-        /*     sleep(1); */
-        /* } */
-
         // ========== GAME LOGIC ===========
 
         // Handling movement.
@@ -339,7 +331,8 @@ int main() {
         for (int x = 0; x < tetrominoWidth; x++) {
             for (int y = 0; y < tetrominoWidth; y++) {
 
-                if (tetromino[currentPiece][rotate(x, y, currentRotation)] == 'X') {
+                if (tetromino[currentPiece][rotate(x, y, currentRotation)] ==
+                    'X') {
                     screen[(currentY + y) * fieldWidth + (currentX + x)] =
                         "ABCDEFG"[currentPiece];
                 }
