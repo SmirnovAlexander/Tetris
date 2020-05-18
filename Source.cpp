@@ -25,12 +25,11 @@
  */
 
 #include <iostream>
-#include <unistd.h>
 #include <ncurses.h>
-#include <stdio.h>
+#include <unistd.h>
 using namespace std;
 
-string tetromino[7];
+static string tetromino[7];
 const int tetrominoWidth = 4;
 
 const int fieldWidth = 12;
@@ -39,17 +38,18 @@ const int fieldArea = fieldWidth * fieldHeight;
 char field[fieldArea];
 char screen[fieldArea];
 
+int row, col;
+
 /**
  * Prints tetromino in nice format.
  *
  * @param tetromino Initial tetromino representation.
- * @param w Width of tetromino block.
  */
-void printTetromino(string tetromino, int w = 4) {
+void printTetromino(string tetromino) {
 
     for (int i = 0; i < tetromino.length(); i++) {
 
-        if (i % w == 0) {
+        if (i % tetrominoWidth == 0) {
             cout << "\n";
         }
 
@@ -71,20 +71,19 @@ void printTetromino(string tetromino, int w = 4) {
  *     1: 90 degrees,
  *     2: 180 degrees,
  *     3: 270 degrees.
- * @param w Width of tetromino block.
  * @return Index in tetromino array.
  */
-int rotate(int x, int y, int r, int w = 4) {
+int rotate(int x, int y, int r) {
 
     switch (r % 4) {
     case 0:
-        return w * y + x;
+        return tetrominoWidth * y + x;
     case 1:
-        return w * (w - 1) + y - w * x;
+        return tetrominoWidth * (tetrominoWidth - 1) + y - tetrominoWidth * x;
     case 2:
-        return w * w - 1 - w * y - x;
+        return tetrominoWidth * tetrominoWidth - 1 - tetrominoWidth * y - x;
     case 3:
-        return w - 1 - y + w * x;
+        return tetrominoWidth - 1 - y + tetrominoWidth * x;
     }
 
     return 0;
@@ -100,16 +99,15 @@ int rotate(int x, int y, int r, int w = 4) {
  *     1: 90 degrees,
  *     2: 180 degrees,
  *     3: 270 degrees.
- * @param w Width of tetromino block.
  * @return rotatedTetromino.
  */
-string rotateTetromino(string tetromino, int r, int w = 4) {
+string rotateTetromino(string tetromino, int r) {
 
     string rotatedTetromino;
 
-    for (int y = 0; y < w; y++) {
-        for (int x = 0; x < w; x++) {
-            int indexToAppend = rotate(x, y, r, w);
+    for (int y = 0; y < tetrominoWidth; y++) {
+        for (int x = 0; x < tetrominoWidth; x++) {
+            int indexToAppend = rotate(x, y, r);
             char pieceToAppend = tetromino[indexToAppend];
             rotatedTetromino += pieceToAppend;
         }
@@ -119,15 +117,19 @@ string rotateTetromino(string tetromino, int r, int w = 4) {
 }
 
 /**
- * Printing screen.
+ * Printing game field in the center of the screen.
  */
 void printScreen(char screen[]) {
 
     for (int i = 0; i < fieldArea; i++) {
         if (i % (fieldWidth) == 0) {
-            cout << "\n";
+            mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
+                    i % (fieldWidth) + (col / 2 - fieldWidth / 2),
+                    '\n');
         }
-        cout << screen[i];
+        mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
+                i % (fieldWidth) + (col / 2 - fieldWidth / 2),
+                screen[i]);
     }
 }
 
@@ -143,16 +145,15 @@ void printScreen(char screen[]) {
  *   3: 270 degrees.
  * @param posX, posY Coordinates of top left
  *   corner of tetromino.
- * @param w Width of tetromino block.
  * @return if tetromino fits.
  */
-bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY, int w = 4) {
+bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY) {
 
-    for (int x = 0; x < w; x++) {
-        for (int y = 0; y < w; y++) {
+    for (int x = 0; x < tetrominoWidth; x++) {
+        for (int y = 0; y < tetrominoWidth; y++) {
 
             // Index of rotated pixel.
-            int pi = rotate(x, y, r, w);
+            int pi = rotate(x, y, r);
 
             // Index of pixel in field.
             int fi = ((posY + y) * fieldWidth) + (posX + x);
@@ -175,7 +176,24 @@ bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY, int w = 4) {
     return true;
 }
 
-int main() {
+/* static string getAnswer() { */
+/*     string answer; */
+/*     cin >> answer; */
+/*     return answer; */
+/* } */
+
+/* int kbhit(void) { */
+/*     int ch = getch(); */
+
+/*     if (ch != ERR) { */
+/*         ungetch(ch); */
+/*         return 1; */
+/*     } else { */
+/*         return 0; */
+/*     } */
+/* } */
+
+void prepareTetromino() {
 
     tetromino[0].append("..X.");
     tetromino[0].append("..X.");
@@ -211,6 +229,12 @@ int main() {
     tetromino[6].append("..XX");
     tetromino[6].append("..X.");
     tetromino[6].append("..X.");
+}
+
+int main() {
+
+    // Filling tetromino array.
+    prepareTetromino();
 
     // Filling play field.
     for (int x = 0; x < fieldWidth; x++) {
@@ -226,28 +250,82 @@ int main() {
     int currentRotation = 0;
     int currentX = fieldWidth / 2;
     int currentY = 0;
+    int pressedKey = 0;
 
-    /* initscr(); */ 
+    // Game speed.
+    int tickTime = 10; // ms.
+    int speed = 100;
+    int speedCounter = 0;
+    bool forceDown = false;
+
+    // Ncurses initialization.
+    initscr();
+    cbreak();
+    noecho();
+    scrollok(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+    getmaxyx(stdscr, row, col);
+    clear();
 
     // Game cycle.
     while (!isGameOver) {
 
         // ========== GAME TIMING ==========
 
-        /* usleep(50000); */
-        usleep(1000000);
+        usleep(tickTime * 1000);
+
+        speedCounter++;
+        forceDown = (speedCounter % speed == 0);
 
         // ========== INPUT ================
 
-        int ch;
-        ch = getch();
+        pressedKey = getch();
+        clear();
+
+        /* if (kbhit()) { */
+        /*     pressedKey = getch(); */
+        /*     /1* printw("Key pressed! It was: %d\n", pressedKey); *1/ */
+        /* } */
+
+        /* else { */
+        /*     printw("No key pressed yet...\n"); */
+        /*     refresh(); */
+        /*     sleep(1); */
+        /* } */
 
         // ========== GAME LOGIC ===========
 
-        // ========== RENDER OUTPUT ========
+        // Handling movement.
+        currentX -=
+            (pressedKey == 104 && doesPieceFit(currentPiece, currentRotation,
+                                               currentX - 1, currentY))
+                ? 1
+                : 0;
+        currentX +=
+            (pressedKey == 108 && doesPieceFit(currentPiece, currentRotation,
+                                               currentX + 1, currentY))
+                ? 1
+                : 0;
+        currentY +=
+            (pressedKey == 106 && doesPieceFit(currentPiece, currentRotation,
+                                               currentX, currentY + 1))
+                ? 1
+                : 0;
+        currentRotation += (pressedKey == 107 &&
+                            doesPieceFit(currentPiece, currentRotation + 1,
+                                         currentX, currentY))
+                               ? 1
+                               : 0;
 
-        // Clearing screen.
-        cout << "\033[2J\033[1;1H";
+        // Handling game.
+        if (forceDown) {
+            if (doesPieceFit(currentPiece, currentRotation, currentX,
+                             currentY + 1)) {
+                currentY++;
+            }
+        }
+
+        // ========== RENDER OUTPUT ========
 
         // Filling screen with field.
         for (int x = 0; x < fieldWidth; x++) {
@@ -261,8 +339,7 @@ int main() {
         for (int x = 0; x < tetrominoWidth; x++) {
             for (int y = 0; y < tetrominoWidth; y++) {
 
-                if (tetromino[currentPiece][rotate(x, y, currentRotation,
-                                                   tetrominoWidth)] == 'X') {
+                if (tetromino[currentPiece][rotate(x, y, currentRotation)] == 'X') {
                     screen[(currentY + y) * fieldWidth + (currentX + x)] =
                         "ABCDEFG"[currentPiece];
                 }
@@ -271,13 +348,14 @@ int main() {
 
         // Printing screen.
         printScreen(screen);
-        cout << "\n";
-        cout << "\n";
-        cout << ch;
-
-        cout << "\n";
-        cout << "\n";
+        addch('\n');
+        addch('\n');
+        mvprintw(row - 1, col / 2, "%d", speedCounter);
+        addch('\n');
+        mvprintw(row - 1, col / 2, "%d", pressedKey);
     }
+
+    endwin();
 
     return 0;
 }
