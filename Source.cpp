@@ -216,7 +216,6 @@ void prepareTetromino() {
     tetromino[6].append("..X.");
 }
 
-
 /**
  * Exiting ncurses before exiting program
  * so terminal doesn't broke.
@@ -225,6 +224,19 @@ void interruptionHandler(int signal) {
     endwin();
     printf("Caught signal %d, exiting...\n", signal);
     exit(1);
+}
+
+int power(int x, int p) {
+    if (p == 0)
+        return 1;
+    if (p == 1)
+        return x;
+
+    int tmp = power(x, p / 2);
+    if (p % 2 == 0)
+        return tmp * tmp;
+    else
+        return x * tmp * tmp;
 }
 
 int main() {
@@ -257,9 +269,11 @@ int main() {
 
     // Game speed.
     int tickTime = 10; // ms.
-    int speed = 100;
+    int speed = 50;
     int speedCounter = 0;
     bool forceDown = false;
+    int pieceCount = 0;
+    int score = 0;
 
     // Storing completed row.
     vector<int> lines;
@@ -291,26 +305,27 @@ int main() {
         // ========== GAME LOGIC ===========
 
         // Handling movement.
-        currentX -=
-            (pressedKey == 104 && doesPieceFit(currentPiece, currentRotation,
-                                               currentX - 1, currentY))
+        currentX -= ((pressedKey == 104 || pressedKey == 97) &&
+                     doesPieceFit(currentPiece, currentRotation, currentX - 1,
+                                  currentY))
+                        ? 1
+                        : 0;
+        currentX += ((pressedKey == 108 || pressedKey == 100) &&
+                     doesPieceFit(currentPiece, currentRotation, currentX + 1,
+                                  currentY))
+                        ? 1
+                        : 0;
+        currentY += ((pressedKey == 106 || pressedKey == 115) &&
+                     doesPieceFit(currentPiece, currentRotation, currentX,
+                                  currentY + 1))
+                        ? 1
+                        : 0;
+        currentRotation +=
+            ((pressedKey == 107 || pressedKey == 119 || pressedKey == 32) &&
+             doesPieceFit(currentPiece, currentRotation + 1, currentX,
+                          currentY))
                 ? 1
                 : 0;
-        currentX +=
-            (pressedKey == 108 && doesPieceFit(currentPiece, currentRotation,
-                                               currentX + 1, currentY))
-                ? 1
-                : 0;
-        currentY +=
-            (pressedKey == 106 && doesPieceFit(currentPiece, currentRotation,
-                                               currentX, currentY + 1))
-                ? 1
-                : 0;
-        currentRotation += (pressedKey == 107 &&
-                            doesPieceFit(currentPiece, currentRotation + 1,
-                                         currentX, currentY))
-                               ? 1
-                               : 0;
 
         // Handling game.
         if (forceDown) {
@@ -324,10 +339,18 @@ int main() {
                 // Lock current piece in field.
                 for (int x = 0; x < tetrominoWidth; x++) {
                     for (int y = 0; y < tetrominoWidth; y++) {
-                        if (tetromino[currentPiece][rotate(x, y, currentRotation)] == 'X') {
-                            field[(currentY + y) * fieldWidth + (currentX + x)] = currentPiece + 1;
+                        if (tetromino[currentPiece]
+                                     [rotate(x, y, currentRotation)] == 'X') {
+                            field[(currentY + y) * fieldWidth +
+                                  (currentX + x)] = currentPiece + 1;
                         }
                     }
+                }
+
+                // Increase piece number.
+                pieceCount++;
+                if (pieceCount % 10 == 0) {
+                    speed -= 10;
                 }
 
                 // Check if we got any lines.
@@ -335,33 +358,57 @@ int main() {
                     if (currentY + y < fieldHeight - 1) {
 
                         bool line = true;
-                        for (int x = 1; x < fieldWidth - 1; x ++) {
-                            line &= (field[(currentY + y) * fieldWidth + x]) != 0;
+                        for (int x = 1; x < fieldWidth - 1; x++) {
+                            line &=
+                                (field[(currentY + y) * fieldWidth + x]) != 0;
                         }
 
                         if (line) {
 
-                            // Remove line, set to '='.
-                            for (int x = 1; x < fieldWidth - 1; x ++) {
-                                field[(currentY + y) * fieldWidth + x] = 8;
-                            }
-                            
+                            /* // Set line to '='. */
+                            /* for (int x = 1; x < fieldWidth - 1; x++) { */
+                            /*     field[(currentY + y) * fieldWidth + x] = 8;
+                             */
+                            /* } */
+
                             lines.push_back(currentY + y);
                         }
-
                     }
+                }
 
+                // Increasing score.
+                score += 25;
+                if (!lines.empty()) {
+                    score += power(lines.size(), 2) * 100;
+                }
+
+                // Removing line.
+                if (!lines.empty()) {
+
+                    /* usleep(1000 * 1000); */
+
+                    for (auto &v : lines) {
+
+                        for (int x = 1; x < fieldWidth - 1; x++) {
+                            for (int y = v; y > 0; y--) {
+                                field[y * fieldWidth + x] =
+                                    field[(y - 1) * fieldWidth + x];
+                            }
+                            field[x] = 0;
+                        }
+                    }
+                    lines.clear();
                 }
 
                 // Choose next piece.
                 currentX = fieldWidth / 2;
                 currentY = 0;
                 currentRotation = 0;
-                srand (time(NULL));
+                srand(time(NULL));
                 currentPiece = rand() % 7;
 
                 // Exit if piece does not fit.
-                isGameOver = !doesPieceFit(currentPiece, currentRotation, 
+                isGameOver = !doesPieceFit(currentPiece, currentRotation,
                                            currentX, currentY + 1);
             }
 
@@ -392,14 +439,14 @@ int main() {
 
         // Printing screen.
         printScreen(screen);
+        mvprintw(row / 2 - 1, 3 * col / 4 - 3, "Score: %d", score);
         addch('\n');
-        addch('\n');
-        mvprintw(row - 1, col / 2, "%d", speedCounter);
-        addch('\n');
-        mvprintw(row - 1, col / 2, "%d", pressedKey);
+        /* mvprintw(row - 1, col / 2, "%d", pressedKey); */
     }
 
     endwin();
+
+    printf("You lost!\nScore: %d", score);
 
     return 0;
 }
