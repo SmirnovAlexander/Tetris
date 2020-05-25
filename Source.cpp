@@ -28,6 +28,7 @@
 #include <ncurses.h>
 #include <signal.h>
 #include <unistd.h>
+#include <vector>
 using namespace std;
 
 static string tetromino[7];
@@ -222,8 +223,7 @@ void prepareTetromino() {
  */
 void interruptionHandler(int signal) {
     endwin();
-    printf("Caught signal %d\n", signal);
-    printf("Exiting...\n");
+    printf("Caught signal %d, exiting...\n", signal);
     exit(1);
 }
 
@@ -249,7 +249,7 @@ int main() {
 
     // Game logic.
     bool isGameOver = false;
-    int currentPiece = 2;
+    int currentPiece = 3;
     int currentRotation = 0;
     int currentX = fieldWidth / 2;
     int currentY = 0;
@@ -260,6 +260,9 @@ int main() {
     int speed = 100;
     int speedCounter = 0;
     bool forceDown = false;
+
+    // Storing completed row.
+    vector<int> lines;
 
     // Ncurses initialization.
     initscr();
@@ -278,7 +281,7 @@ int main() {
         usleep(tickTime * 1000);
 
         speedCounter++;
-        forceDown = (speedCounter % speed == 0);
+        forceDown = (speedCounter == speed);
 
         // ========== INPUT ================
 
@@ -315,6 +318,54 @@ int main() {
                              currentY + 1)) {
                 currentY++;
             }
+
+            else {
+
+                // Lock current piece in field.
+                for (int x = 0; x < tetrominoWidth; x++) {
+                    for (int y = 0; y < tetrominoWidth; y++) {
+                        if (tetromino[currentPiece][rotate(x, y, currentRotation)] == 'X') {
+                            field[(currentY + y) * fieldWidth + (currentX + x)] = currentPiece + 1;
+                        }
+                    }
+                }
+
+                // Check if we got any lines.
+                for (int y = 0; y < tetrominoWidth; y++) {
+                    if (currentY + y < fieldHeight - 1) {
+
+                        bool line = true;
+                        for (int x = 1; x < fieldWidth - 1; x ++) {
+                            line &= (field[(currentY + y) * fieldWidth + x]) != 0;
+                        }
+
+                        if (line) {
+
+                            // Remove line, set to '='.
+                            for (int x = 1; x < fieldWidth - 1; x ++) {
+                                field[(currentY + y) * fieldWidth + x] = 8;
+                            }
+                            
+                            lines.push_back(currentY + y);
+                        }
+
+                    }
+
+                }
+
+                // Choose next piece.
+                currentX = fieldWidth / 2;
+                currentY = 0;
+                currentRotation = 0;
+                srand (time(NULL));
+                currentPiece = rand() % 7;
+
+                // Exit if piece does not fit.
+                isGameOver = !doesPieceFit(currentPiece, currentRotation, 
+                                           currentX, currentY + 1);
+            }
+
+            speedCounter = 0;
         }
 
         // ========== RENDER OUTPUT ========
