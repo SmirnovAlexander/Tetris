@@ -284,6 +284,7 @@ int main() {
     noecho();
     scrollok(stdscr, TRUE);
     nodelay(stdscr, TRUE);
+    curs_set(0);
     getmaxyx(stdscr, row, col);
     clear();
 
@@ -440,7 +441,6 @@ int main() {
         // Printing screen.
         printScreen(screen);
         mvprintw(row / 2 - 1, 3 * col / 4 - 3, "Score: %d", score);
-        addch('\n');
         /* mvprintw(row - 1, col / 2, "%d", pressedKey); */
     }
 
