@@ -18,8 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
@@ -29,17 +28,11 @@
 #include <signal.h>
 #include <unistd.h>
 #include <vector>
+#include "../include/functions.h"
+#include "../include/globals.h"
 using namespace std;
 
-static string tetromino[7];
-const int tetrominoWidth = 4;
 
-int row, col; // Dimensions of current terminal instance.
-const int fieldWidth = 12;
-const int fieldHeight = 18;
-const int fieldArea = fieldWidth * fieldHeight;
-char field[fieldArea];
-char screen[fieldArea];
 
 /**
  * Prints tetromino in nice format.
@@ -58,36 +51,6 @@ void printTetromino(string tetromino) {
     }
 
     cout << "\n";
-}
-
-/**
- * Rotating pixel.
- *
- * Maps x, y to index in tetromino array.
- *
- * @param x, y Piece coordinate to rotate.
- * @param r Rotate index, may be
- *     one of the following:
- *     0: 0 degrees,
- *     1: 90 degrees,
- *     2: 180 degrees,
- *     3: 270 degrees.
- * @return Index in tetromino array.
- */
-int rotate(int x, int y, int r) {
-
-    switch (r % 4) {
-    case 0:
-        return tetrominoWidth * y + x;
-    case 1:
-        return tetrominoWidth * (tetrominoWidth - 1) + y - tetrominoWidth * x;
-    case 2:
-        return tetrominoWidth * tetrominoWidth - 1 - tetrominoWidth * y - x;
-    case 3:
-        return tetrominoWidth - 1 - y + tetrominoWidth * x;
-    }
-
-    return 0;
 }
 
 /**
@@ -224,19 +187,6 @@ void interruptionHandler(int signal) {
     endwin();
     printf("Caught signal %d, exiting...\n", signal);
     exit(1);
-}
-
-int power(int x, int p) {
-    if (p == 0)
-        return 1;
-    if (p == 1)
-        return x;
-
-    int tmp = power(x, p / 2);
-    if (p % 2 == 0)
-        return tmp * tmp;
-    else
-        return x * tmp * tmp;
 }
 
 int main() {
@@ -388,8 +338,7 @@ int main() {
 
                     /* usleep(1000 * 1000); */
 
-                    for (auto &v : lines) {
-
+                    for (int v : lines) {
                         for (int x = 1; x < fieldWidth - 1; x++) {
                             for (int y = v; y > 0; y--) {
                                 field[y * fieldWidth + x] =
