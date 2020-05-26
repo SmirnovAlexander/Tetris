@@ -18,7 +18,6 @@ TEST_CASE( "Tetromino string rotation function", "[rotateTetromino]" ) {
 
 TEST_CASE( "Custom power function for integers", "[power]" ) {
     REQUIRE( power(10, 0) == 1 );
-
     REQUIRE( power(2, 5) == 32 );
     REQUIRE( power(1, 10) == 1 );
 }
