@@ -6,7 +6,7 @@ EXECUTABLE=bin/tetris
 EXECUTABLE_TESTS=bin/tests
 
 all: 
-	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
+	$(CC) -o $(EXECUTABLE) $(SOURCES) $(CFLAGS) 
 
 test:
 	$(CC) $(SOURCES_TEST) -o $(EXECUTABLE_TESTS) && ./$(EXECUTABLE_TESTS)
