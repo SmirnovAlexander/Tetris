@@ -1,5 +1,4 @@
 dist: bionic
-sudo: require
 language: cpp
 script: 
     - make && make test
