@@ -1,4 +1,5 @@
 #include "../include/globals.h"
+#include "../include/functions.h"
 
 /**
  * Rotating pixel.
@@ -29,6 +30,55 @@ int rotate(int x, int y, int r) {
 
     return 0;
 }
+
+/**
+ * Prints tetromino in nice format.
+ *
+ * @param tetromino Initial tetromino representation.
+ */
+void printTetromino(string tetromino) {
+
+    for (int i = 0; i < tetromino.length(); i++) {
+
+        if (i % tetrominoWidth == 0) {
+            cout << "\n";
+        }
+
+        cout << tetromino.at(i);
+    }
+
+    cout << "\n";
+}
+
+
+/**
+ * Rotating tetromino.
+ *
+ * @param tetromino Tetromino to rotate.
+ * @param r Rotate index, may be
+ *     one of the following:
+ *     0: 0 degrees,
+ *     1: 90 degrees,
+ *     2: 180 degrees,
+ *     3: 270 degrees.
+ * @return rotatedTetromino.
+ */
+string rotateTetromino(string tetromino, int r) {
+
+    string rotatedTetromino;
+
+    for (int y = 0; y < tetrominoWidth; y++) {
+        for (int x = 0; x < tetrominoWidth; x++) {
+            int indexToAppend = rotate(x, y, r);
+            char pieceToAppend = tetromino[indexToAppend];
+            rotatedTetromino += pieceToAppend;
+        }
+    }
+
+    return rotatedTetromino;
+}
+
+
 
 /**
   * Make integer to the power of integer.

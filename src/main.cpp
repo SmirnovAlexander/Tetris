@@ -23,77 +23,12 @@
  * SOFTWARE.
  */
 
-#include <iostream>
 #include <ncurses.h>
 #include <signal.h>
 #include <unistd.h>
 #include <vector>
 #include "../include/functions.h"
 #include "../include/globals.h"
-using namespace std;
-
-
-
-/**
- * Prints tetromino in nice format.
- *
- * @param tetromino Initial tetromino representation.
- */
-void printTetromino(string tetromino) {
-
-    for (int i = 0; i < tetromino.length(); i++) {
-
-        if (i % tetrominoWidth == 0) {
-            cout << "\n";
-        }
-
-        cout << tetromino.at(i);
-    }
-
-    cout << "\n";
-}
-
-/**
- * Rotating tetromino.
- *
- * @param tetromino Tetromino to rotate.
- * @param r Rotate index, may be
- *     one of the following:
- *     0: 0 degrees,
- *     1: 90 degrees,
- *     2: 180 degrees,
- *     3: 270 degrees.
- * @return rotatedTetromino.
- */
-string rotateTetromino(string tetromino, int r) {
-
-    string rotatedTetromino;
-
-    for (int y = 0; y < tetrominoWidth; y++) {
-        for (int x = 0; x < tetrominoWidth; x++) {
-            int indexToAppend = rotate(x, y, r);
-            char pieceToAppend = tetromino[indexToAppend];
-            rotatedTetromino += pieceToAppend;
-        }
-    }
-
-    return rotatedTetromino;
-}
-
-/**
- * Printing game field in the center of the screen.
- */
-void printScreen(char screen[]) {
-
-    for (int i = 0; i < fieldArea; i++) {
-        if (i % (fieldWidth) == 0) {
-            mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
-                    i % (fieldWidth) + (col / 2 - fieldWidth / 2), '\n');
-        }
-        mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
-                i % (fieldWidth) + (col / 2 - fieldWidth / 2), screen[i]);
-    }
-}
 
 /**
  * Checking if tetromino fits.
@@ -138,45 +73,21 @@ bool doesPieceFit(int tetrominoIndex, int r, int posX, int posY) {
     return true;
 }
 
+
+
 /**
- * Adding tetrominos strings to tetromino variable.
+ * Printing game field in the center of the screen.
  */
-void prepareTetromino() {
+void printScreen(char screen[]) {
 
-    tetromino[0].append("..X.");
-    tetromino[0].append("..X.");
-    tetromino[0].append("..X.");
-    tetromino[0].append("..X.");
-
-    tetromino[1].append("..X.");
-    tetromino[1].append(".XX.");
-    tetromino[1].append(".X..");
-    tetromino[1].append("....");
-
-    tetromino[2].append(".X..");
-    tetromino[2].append(".XX.");
-    tetromino[2].append("..X.");
-    tetromino[2].append("....");
-
-    tetromino[3].append("....");
-    tetromino[3].append(".XX.");
-    tetromino[3].append(".XX.");
-    tetromino[3].append("....");
-
-    tetromino[4].append("..X.");
-    tetromino[4].append(".XX.");
-    tetromino[4].append("..X.");
-    tetromino[4].append("....");
-
-    tetromino[5].append("....");
-    tetromino[5].append(".XX.");
-    tetromino[5].append("..X.");
-    tetromino[5].append("..X.");
-
-    tetromino[6].append("....");
-    tetromino[6].append("..XX");
-    tetromino[6].append("..X.");
-    tetromino[6].append("..X.");
+    for (int i = 0; i < fieldArea; i++) {
+        if (i % (fieldWidth) == 0) {
+            mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
+                    i % (fieldWidth) + (col / 2 - fieldWidth / 2), '\n');
+        }
+        mvaddch(i / (fieldWidth) + (row / 2 - fieldHeight / 2),
+                i % (fieldWidth) + (col / 2 - fieldWidth / 2), screen[i]);
+    }
 }
 
 /**
@@ -199,7 +110,7 @@ int main() {
     sigaction(SIGINT, &sigIntHandler, NULL);
 
     // Filling tetromino array.
-    prepareTetromino();
+    /* string *tetromino = prepareTetromino(); */
 
     // Filling play field.
     for (int x = 0; x < fieldWidth; x++) {
@@ -211,7 +122,7 @@ int main() {
 
     // Game logic.
     bool isGameOver = false;
-    int currentPiece = 3;
+    int currentPiece = 2;
     int currentRotation = 0;
     int currentX = fieldWidth / 2;
     int currentY = 0;
