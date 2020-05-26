@@ -1,5 +1,6 @@
 CC=g++
-CFLAGS=-lncurses
+CFLAGS=-std=c++11 -lncurses
+CTFLAGS=-std=c++11
 SOURCES=src/main.cpp src/functions.cpp
 SOURCES_TEST=src/functions.cpp test/tests.cpp
 BIN=bin
@@ -11,6 +12,10 @@ all:
 	$(CC) -o $(BIN)/$(EXECUTABLE) $(SOURCES) $(CFLAGS) 
 
 test:
-	$(CC) -o $(BIN)/$(EXECUTABLE_TESTS) $(SOURCES_TEST) && ./$(BIN)/$(EXECUTABLE_TESTS)
+	mkdir -p $(BIN)
+	$(CC) -o $(BIN)/$(EXECUTABLE_TESTS) $(SOURCES_TEST) $(CTFLAGS) && ./$(BIN)/$(EXECUTABLE_TESTS)
+
+clean:
+	rm -rf $(BIN)
 
 .PHONY: all test clean
