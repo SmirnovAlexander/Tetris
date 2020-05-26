@@ -14,4 +14,6 @@ before_install:
     - eval "${MATRIX_EVAL}"
 script: 
     - g++ -v
+    - ln -s /usr/bin/g++-7 /usr/local/bin/g++
+    - g++ -v
     - make && make test
