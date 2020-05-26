@@ -129,12 +129,13 @@ int main() {
     int pressedKey = 0;
 
     // Game speed.
-    int tickTime = 10; // ms.
-    int speed = 50;
+    int tickTime = 25; // ms.
+    int speed = 20;
     int speedCounter = 0;
     bool forceDown = false;
     int pieceCount = 0;
     int score = 0;
+    int level = 0;
 
     // Storing completed row.
     vector<int> lines;
@@ -212,7 +213,10 @@ int main() {
                 // Increase piece number.
                 pieceCount++;
                 if (pieceCount % 10 == 0) {
-                    speed -= 10;
+                    if (speed > 5) {
+                        level += 1;
+                        speed -= 5;
+                    }
                 }
 
                 // Check if we got any lines.
@@ -300,7 +304,9 @@ int main() {
 
         // Printing screen.
         printScreen(screen);
-        mvprintw(row / 2 - 1, 3 * col / 4 - 3, "Score: %d", score);
+        mvprintw(row / 2 - 2, 3 * col / 4 - 3, "Score: %d", score);
+        mvprintw(row / 2 - 1, 3 * col / 4 - 3, "Pieces: %d", pieceCount);
+        mvprintw(row / 2, 3 * col / 4 - 3, "Level: %d", level);
         /* mvprintw(row - 1, col / 2, "%d", pressedKey); */
     }
 
