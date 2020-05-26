@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++11 -lncurses -ltinfo
+CFLAGS=-lncurses
 SOURCES=src/main.cpp src/functions.cpp
 SOURCES_TEST=src/functions.cpp test/tests.cpp
 EXECUTABLE=bin/tetris
@@ -9,6 +9,6 @@ all:
 	$(CC) -o $(EXECUTABLE) $(SOURCES) $(CFLAGS) 
 
 test:
-	$(CC) $(SOURCES_TEST) -o $(EXECUTABLE_TESTS) && ./$(EXECUTABLE_TESTS)
+	$(CC) -o $(EXECUTABLE_TESTS) $(SOURCES_TEST) && ./$(EXECUTABLE_TESTS)
 
 .PHONY: all test clean
