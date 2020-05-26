@@ -4,7 +4,15 @@
 #include <string>
 
 const int tetrominoWidth = 4;
-static std::string tetromino[7];
+static std::string tetromino[7] = {
+	"..X...X...X...X.",
+	"..X..XX...X.....",
+	".....XX..XX.....",
+	"..X..XX..X......",
+	".X...XX...X.....",
+	".X...X...XX.....",
+	"..X...X..XX....."
+};
 
 const int fieldWidth = 12;
 const int fieldHeight = 18;
