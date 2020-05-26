@@ -4,7 +4,7 @@
 
 Terminal tetris game for *nix operating system
 
-<img src="https://user-images.githubusercontent.com/32129186/82892702-9d1bba80-9f58-11ea-955b-c69c7cabbba9.gif" width="500" />
+<img src="https://user-images.githubusercontent.com/32129186/82897155-de639880-9f5f-11ea-81a5-98c441744e06.gif" width="500" />
 
 ## Installing
 
