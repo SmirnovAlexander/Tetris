@@ -6,6 +6,7 @@ EXECUTABLE=bin/tetris
 EXECUTABLE_TESTS=bin/tests
 
 all: 
+	mkdir -p bin
 	$(CC) -o $(EXECUTABLE) $(SOURCES) $(CFLAGS) 
 
 test:
