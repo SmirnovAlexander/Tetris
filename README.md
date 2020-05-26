@@ -49,3 +49,7 @@ Also there is a <kbd>space</kbd> to flip the piece for convinience.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+Thanks [Javidx9](https://github.com/OneLoneCoder) for C++ tutorials.
