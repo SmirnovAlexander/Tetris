@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++11 -lncurses
+CFLAGS=-std=c++11 -lncurses -ltinfo
 SOURCES=src/main.cpp src/functions.cpp
 SOURCES_TEST=src/functions.cpp test/tests.cpp
 EXECUTABLE=bin/tetris
